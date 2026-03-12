@@ -12,7 +12,7 @@ module "sops" {
 
 module "derivation" {
   source        = "../nix-drv"
-  attribute     = var.attribute
+  attribute     = "${var.attribute}.config.system.build.toplevel"
   nix_options   = var.nix_options
   allow_unfree  = var.allow_unfree
   debug_logging = var.debug_logging
