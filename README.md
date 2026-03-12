@@ -56,9 +56,60 @@ module "deploy" {
 }
 ```
 
+### sops-deploy
+
+Deploys sops-encrypted secrets to remote hosts over SSH.
+
+```hcl
+module "sops" {
+  source   = "git::https://github.com/plumelo/nixtf.git//modules/sops-deploy?ref=v0.1.0"
+  host     = "192.168.1.100"
+  user     = "root"                           # optional, defaults to "root"
+  path     = "${path.module}/secrets.yaml"   # path to sops file
+  key      = "[\"age\"][\"key\"]"             # optional, defaults to age key
+  dest     = "/var/lib/sops-nix/key.txt"     # optional, defaults to sops-nix path
+  triggers = [var.some_trigger]              # optional, additional triggers
+}
+```
+
+**Outputs:**
+- `id` — Resource ID for use as trigger in dependent resources
+
+### nixos-deploy
+
+All-in-one module that combines `nix-drv`, `nixos-rebuild`, and optionally `sops-deploy` into a single convenient module.
+
+```hcl
+module "deploy" {
+  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.1.0"
+  attribute      = ".#nixosConfigurations.myhost"
+  target_host    = "192.168.1.100"
+  target_user    = "root"                     # optional
+  sudo           = false                      # optional
+  allow_unfree   = false                      # optional
+  sops_file      = "${path.module}/sops.yaml" # optional, enables sops-deploy
+  extra_triggers = [var.instance.mac_address] # optional
+}
+```
+
+**Without sops (minimal):**
+```hcl
+module "deploy" {
+  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.1.0"
+  attribute   = ".#nixosConfigurations.myhost"
+  target_host = "192.168.1.100"
+}
+```
+
+**Outputs:**
+- `derivation` — Derivation information
+- `sops_id` — Sops deploy resource ID (if sops enabled)
+
 ## Typical Workflow
 
-Combine all three modules for a complete NixOS deployment pipeline:
+### With separate modules
+
+Combine `nix-drv`, `nix-build`, and `nixos-rebuild` for a complete NixOS deployment pipeline:
 
 ```hcl
 # 1. Evaluate derivation hash (runs on every plan)
@@ -83,11 +134,28 @@ module "deploy" {
 }
 ```
 
+### With nixos-deploy (recommended)
+
+For most use cases, use the combined `nixos-deploy` module:
+
+```hcl
+# Deploy NixOS configuration with sops secrets
+module "deploy" {
+  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.1.0"
+  attribute      = ".#nixosConfigurations.myhost"
+  target_host    = var.target_host
+  sops_file      = "${path.module}/sops.yaml"
+  allow_unfree   = true
+  extra_triggers = [var.instance.mac_address]
+}
+```
+
 ## Requirements
 
 - **Nix** with flakes enabled on the machine running Terraform
 - **jq** for JSON processing in shell scripts
 - **SSH agent** running with deploy key loaded (for `nixos-rebuild`)
+- **sops** CLI (for `sops-deploy`)
 - Terraform providers:
   - `hashicorp/external` (for `nix-drv`, `nixos-rebuild`)
   - `steigr/shell` (for `nix-build`)
