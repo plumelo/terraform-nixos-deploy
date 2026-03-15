@@ -12,7 +12,7 @@ Use this to detect when a Nix derivation has changed, triggering dependent resou
 
 ```hcl
 module "nix_drv" {
-  source       = "git::https://github.com/plumelo/nixtf.git//modules/nix-drv?ref=v0.1.0"
+  source       = "git::https://github.com/plumelo/nixtf.git//modules/nix-drv?ref=v0.3.0"
   attribute    = ".#nixosConfigurations.myhost"
   allow_unfree = false  # optional, defaults to false
 }
@@ -29,7 +29,7 @@ Uses `shell_script` from the `steigr/shell` provider to run `nix build` and capt
 
 ```hcl
 module "nix_build" {
-  source       = "git::https://github.com/plumelo/nixtf.git//modules/nix-build?ref=v0.1.0"
+  source       = "git::https://github.com/plumelo/nixtf.git//modules/nix-build?ref=v0.3.0"
   attribute    = ".#nixosConfigurations.myhost.config.system.build.toplevel"
   allow_unfree = false  # optional, defaults to false
   triggers     = {
@@ -43,16 +43,16 @@ module "nix_build" {
 
 ### nixos-rebuild
 
-Runs `nixos-rebuild switch` against a remote host over SSH. Triggered by derivation changes.
+Runs `nixos-rebuild switch` against a remote host over SSH. Uses `--flake` to deploy the specified attribute.
 
 ```hcl
 module "deploy" {
-  source       = "git::https://github.com/plumelo/nixtf.git//modules/nixos-rebuild?ref=v0.1.0"
-  nixos_system = module.nix_build.out
-  target_host  = "192.168.1.100"
-  target_user  = "root"  # optional, defaults to "root"
-  sudo         = false   # optional, defaults to false
-  triggers     = [module.nix_build.out]  # rebuild when NixOS system changes
+  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-rebuild?ref=v0.3.0"
+  attribute   = ".#nixosConfigurations.myhost"
+  target_host = "192.168.1.100"
+  target_user = "root"  # optional, defaults to "root"
+  sudo        = false   # optional, defaults to false
+  triggers    = [module.nix_build.out]  # rebuild when derivation changes
 }
 ```
 
@@ -62,7 +62,7 @@ Deploys sops-encrypted secrets to remote hosts over SSH.
 
 ```hcl
 module "sops" {
-  source   = "git::https://github.com/plumelo/nixtf.git//modules/sops-deploy?ref=v0.1.0"
+  source   = "git::https://github.com/plumelo/nixtf.git//modules/sops-deploy?ref=v0.3.0"
   host     = "192.168.1.100"
   user     = "root"                           # optional, defaults to "root"
   path     = "${path.module}/secrets.yaml"   # path to sops file
@@ -81,7 +81,7 @@ All-in-one module that combines `nix-drv`, `nixos-rebuild`, and optionally `sops
 
 ```hcl
 module "deploy" {
-  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.1.0"
+  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.3.0"
   attribute      = ".#nixosConfigurations.myhost"
   target_host    = "192.168.1.100"
   target_user    = "root"                     # optional
@@ -95,7 +95,7 @@ module "deploy" {
 **Without sops (minimal):**
 ```hcl
 module "deploy" {
-  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.1.0"
+  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.3.0"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = "192.168.1.100"
 }
@@ -114,23 +114,24 @@ Combine `nix-drv`, `nix-build`, and `nixos-rebuild` for a complete NixOS deploym
 ```hcl
 # 1. Evaluate derivation hash (runs on every plan)
 module "nix_drv" {
-  source    = "git::https://github.com/plumelo/nixtf.git//modules/nix-drv?ref=v0.1.0"
+  source    = "git::https://github.com/plumelo/nixtf.git//modules/nix-drv?ref=v0.3.0"
   attribute = ".#nixosConfigurations.myhost"
 }
 
 # 2. Build when derivation changes
 module "nix_build" {
-  source    = "git::https://github.com/plumelo/nixtf.git//modules/nix-build?ref=v0.1.0"
+  source    = "git::https://github.com/plumelo/nixtf.git//modules/nix-build?ref=v0.3.0"
   attribute = ".#nixosConfigurations.myhost.config.system.build.toplevel"
   triggers  = { drv = module.nix_drv.result.drv }
 }
 
 # 3. Deploy when build changes
 module "deploy" {
-  source       = "git::https://github.com/plumelo/nixtf.git//modules/nixos-rebuild?ref=v0.1.0"
-  nixos_system = module.nix_build.out
-  target_host  = var.target_host
-  target_user  = "admin"
+  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-rebuild?ref=v0.3.0"
+  attribute   = ".#nixosConfigurations.myhost"
+  target_host = var.target_host
+  target_user = "admin"
+  triggers    = [module.nix_build.out]
 }
 ```
 
@@ -141,7 +142,7 @@ For most use cases, use the combined `nixos-deploy` module:
 ```hcl
 # Deploy NixOS configuration with sops secrets
 module "deploy" {
-  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.1.0"
+  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.3.0"
   attribute      = ".#nixosConfigurations.myhost"
   target_host    = var.target_host
   sops_file      = "${path.module}/sops.yaml"

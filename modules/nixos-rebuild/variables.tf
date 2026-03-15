@@ -1,6 +1,6 @@
-variable "nixos_system" {
+variable "attribute" {
   type        = string
-  description = "Nix derivation path for the NixOS system to deploy (e.g. '.#nixosConfigurations.hostname.config.system.build.toplevel')"
+  description = "Nix flake attribute to deploy (e.g. '.#nixosConfigurations.hostname')"
 }
 
 variable "target_host" {
