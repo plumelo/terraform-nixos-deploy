@@ -19,12 +19,13 @@ module "derivation" {
 }
 
 module "deploy" {
-  source       = "../nixos-rebuild"
-  nixos_system = module.derivation.result.drv
-  target_host  = var.target_host
-  target_user  = var.target_user
-  sudo         = var.sudo
+  source      = "../nixos-rebuild"
+  attribute   = var.attribute
+  target_host = var.target_host
+  target_user = var.target_user
+  sudo        = var.sudo
   triggers = concat(
+    [module.derivation.result.drv],
     var.sops_file != null ? [module.sops[0].id] : [],
     var.extra_triggers
   )
