@@ -1,6 +1,6 @@
 variable "attribute" {
   type        = string
-  description = "Nix flake attribute to deploy (e.g. '.#nixosConfigurations.hostname')"
+  description = "Nix flake attribute. Accepts '.#flow', './path#flow', or '.#nixosConfigurations.flow' - both formats work."
 }
 
 variable "target_host" {
