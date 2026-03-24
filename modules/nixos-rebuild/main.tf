@@ -10,7 +10,7 @@ terraform {
 locals {
   ssh_opts = join(" ", compact([
     var.forward_agent ? "-A" : "",
-    var.identity_agent ? "$${SSH_AUTH_SOCK:+-o IdentityAgent=$$SSH_AUTH_SOCK}" : "",
+    var.identity_agent ? "$${SSH_AUTH_SOCK:+-o IdentityAgent=$SSH_AUTH_SOCK}" : "",
     "-o StrictHostKeyChecking=no",
     "-o UserKnownHostsFile=/dev/null",
   ]))
