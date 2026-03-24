@@ -44,11 +44,13 @@ module "derivation" {
 }
 
 module "deploy" {
-  source      = "../nixos-rebuild"
-  attribute   = local.flake_attribute
-  target_host = var.target_host
-  target_user = var.target_user
-  sudo        = var.sudo
+  source         = "../nixos-rebuild"
+  attribute      = local.flake_attribute
+  target_host    = var.target_host
+  target_user    = var.target_user
+  sudo           = var.sudo
+  forward_agent  = var.forward_agent
+  identity_agent = var.identity_agent
   triggers = concat(
     [module.derivation.result.drv],
     var.sops_file != null ? [module.sops[0].id] : [],
