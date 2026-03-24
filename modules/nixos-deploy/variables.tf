@@ -20,6 +20,18 @@ variable "sudo" {
   description = "Use sudo for remote commands"
 }
 
+variable "forward_agent" {
+  type        = bool
+  default     = false
+  description = "Enable SSH agent forwarding (-A) to the remote host."
+}
+
+variable "identity_agent" {
+  type        = bool
+  default     = true
+  description = "Pin the SSH agent socket via -o IdentityAgent. Only takes effect when SSH_AUTH_SOCK is set in the environment."
+}
+
 variable "allow_unfree" {
   type        = bool
   default     = false

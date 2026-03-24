@@ -14,6 +14,18 @@ variable "target_user" {
   description = "User to deploy as"
 }
 
+variable "forward_agent" {
+  type        = bool
+  default     = false
+  description = "Enable SSH agent forwarding (-A) to the remote host."
+}
+
+variable "identity_agent" {
+  type        = bool
+  default     = true
+  description = "Pin the SSH agent socket via -o IdentityAgent. Only takes effect when SSH_AUTH_SOCK is set in the environment."
+}
+
 variable "sudo" {
   type        = bool
   default     = false
