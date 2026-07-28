@@ -1,8 +1,8 @@
-# nixtf
+# terraform-nixos-deploy
 
-Reusable Terraform modules for NixOS workflows.
+> nixtf — NixOS Terraform modules with plan-time change detection
 
-Published to the Terraform Registry as [`plumelo/deploy/nixos`](https://registry.terraform.io/modules/plumelo/deploy/nixos).
+Reusable Terraform modules for NixOS workflows. Published to the Terraform Registry as [`plumelo/deploy/nixos`](https://registry.terraform.io/modules/plumelo/deploy/nixos).
 
 ## Why nixtf?
 
