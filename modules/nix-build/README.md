@@ -9,7 +9,7 @@ Uses `shell_script` from the `steigr/shell` provider to run `nix build` and capt
 ```hcl
 module "nix_build" {
   source    = "plumelo/deploy/nixos//modules/nix-build"
-  version   = "1.0.0"
+  version   = "1.0.1"
   attribute = ".#nixosConfigurations.myhost.config.system.build.toplevel"
   triggers  = {
     drv = module.nix_drv.result.drv

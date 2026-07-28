@@ -11,7 +11,7 @@ terraform {
 
 module "deploy" {
   source      = "plumelo/deploy/nixos"
-  version     = "1.0.0"
+  version     = "1.0.1"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = var.target_host
 }

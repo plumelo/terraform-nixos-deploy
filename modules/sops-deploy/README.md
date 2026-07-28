@@ -7,7 +7,7 @@ Deploys sops-encrypted secrets to remote hosts over SSH.
 ```hcl
 module "sops" {
   source   = "plumelo/deploy/nixos//modules/sops-deploy"
-  version  = "1.0.0"
+  version  = "1.0.1"
   host     = "192.168.1.100"
   user     = "root"
   path     = "${path.module}/secrets.yaml"

@@ -11,7 +11,7 @@ Unlike typical NixOS Terraform modules that build on every `terraform apply`, ni
 ```hcl
 module "deploy" {
   source         = "plumelo/deploy/nixos//modules/nixos-deploy"
-  version        = "1.0.0"
+  version        = "1.0.1"
   attribute      = ".#nixosConfigurations.myhost"
   target_host    = "192.168.1.100"
   sops_file      = "${path.module}/sops.yaml"
@@ -25,7 +25,7 @@ module "deploy" {
 ```hcl
 module "deploy" {
   source      = "plumelo/deploy/nixos//modules/nixos-deploy"
-  version     = "1.0.0"
+  version     = "1.0.1"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = "192.168.1.100"
 }

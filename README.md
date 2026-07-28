@@ -34,7 +34,7 @@ Compare to a typical `nixos-rebuild`-on-apply module where every `terraform plan
 ```hcl
 module "deploy" {
   source      = "plumelo/deploy/nixos"
-  version     = "1.0.0"
+  version     = "1.0.1"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = "192.168.1.100"
 }
@@ -49,7 +49,7 @@ All-in-one module that combines `nix-drv`, `nixos-rebuild`, and optionally `sops
 ```hcl
 module "deploy" {
   source         = "plumelo/deploy/nixos"
-  version        = "1.0.0"
+  version        = "1.0.1"
   attribute      = ".#nixosConfigurations.myhost"
   target_host    = "192.168.1.100"
   target_user    = "root"
@@ -65,7 +65,7 @@ module "deploy" {
 ```hcl
 module "deploy" {
   source      = "plumelo/deploy/nixos"
-  version     = "1.0.0"
+  version     = "1.0.1"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = "192.168.1.100"
 }
@@ -84,7 +84,7 @@ Use this to detect when a Nix derivation has changed, triggering dependent resou
 ```hcl
 module "nix_drv" {
   source       = "plumelo/deploy/nixos//modules/nix-drv"
-  version      = "1.0.0"
+  version      = "1.0.1"
   attribute    = ".#nixosConfigurations.myhost"
   allow_unfree = false
 }
@@ -102,7 +102,7 @@ Uses `shell_script` from the `steigr/shell` provider to run `nix build` and capt
 ```hcl
 module "nix_build" {
   source       = "plumelo/deploy/nixos//modules/nix-build"
-  version      = "1.0.0"
+  version      = "1.0.1"
   attribute    = ".#nixosConfigurations.myhost.config.system.build.toplevel"
   allow_unfree = false
   triggers     = {
@@ -121,7 +121,7 @@ Runs `nixos-rebuild switch` against a remote host over SSH. Uses `--flake` to de
 ```hcl
 module "deploy" {
   source      = "plumelo/deploy/nixos//modules/nixos-rebuild"
-  version     = "1.0.0"
+  version     = "1.0.1"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = "192.168.1.100"
   target_user = "root"
@@ -137,7 +137,7 @@ Deploys sops-encrypted secrets to remote hosts over SSH.
 ```hcl
 module "sops" {
   source   = "plumelo/deploy/nixos//modules/sops-deploy"
-  version  = "1.0.0"
+  version  = "1.0.1"
   host     = "192.168.1.100"
   user     = "root"
   path     = "${path.module}/secrets.yaml"
@@ -159,7 +159,7 @@ For most use cases, use the combined `nixos-deploy` module:
 ```hcl
 module "deploy" {
   source         = "plumelo/deploy/nixos"
-  version        = "1.0.0"
+  version        = "1.0.1"
   attribute      = ".#nixosConfigurations.myhost"
   target_host    = var.target_host
   sops_file      = "${path.module}/sops.yaml"
@@ -176,14 +176,14 @@ Combine `nix-drv`, `nix-build`, and `nixos-rebuild` for a complete NixOS deploym
 # 1. Evaluate derivation hash (runs on every plan)
 module "nix_drv" {
   source    = "plumelo/deploy/nixos//modules/nix-drv"
-  version   = "1.0.0"
+  version   = "1.0.1"
   attribute = ".#nixosConfigurations.myhost"
 }
 
 # 2. Build when derivation changes
 module "nix_build" {
   source    = "plumelo/deploy/nixos//modules/nix-build"
-  version   = "1.0.0"
+  version   = "1.0.1"
   attribute = ".#nixosConfigurations.myhost.config.system.build.toplevel"
   triggers  = { drv = module.nix_drv.result.drv }
 }
@@ -191,7 +191,7 @@ module "nix_build" {
 # 3. Deploy when build changes
 module "deploy" {
   source      = "plumelo/deploy/nixos//modules/nixos-rebuild"
-  version     = "1.0.0"
+  version     = "1.0.1"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = var.target_host
   target_user = "admin"

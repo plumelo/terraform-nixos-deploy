@@ -9,7 +9,7 @@ This is the core of what makes nixtf different from typical NixOS Terraform modu
 ```hcl
 module "nix_drv" {
   source    = "plumelo/deploy/nixos//modules/nix-drv"
-  version   = "1.0.0"
+  version   = "1.0.1"
   attribute = ".#nixosConfigurations.myhost"
 }
 ```
