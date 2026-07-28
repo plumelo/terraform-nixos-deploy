@@ -2,7 +2,53 @@
 
 Reusable Terraform modules for NixOS workflows.
 
+Published to the Terraform Registry as [`plumelo/deploy/nixos`](https://registry.terraform.io/modules/plumelo/deploy/nixos).
+
+## Quick Start
+
+```hcl
+module "deploy" {
+  source      = "plumelo/deploy/nixos"
+  version     = "1.0.0"
+  attribute   = ".#nixosConfigurations.myhost"
+  target_host = "192.168.1.100"
+}
+```
+
 ## Modules
+
+### nixos-deploy (root)
+
+All-in-one module that combines `nix-drv`, `nixos-rebuild`, and optionally `sops-deploy` into a single convenient module. This is the default entrypoint when using `source = "plumelo/deploy/nixos"`.
+
+```hcl
+module "deploy" {
+  source         = "plumelo/deploy/nixos"
+  version        = "1.0.0"
+  attribute      = ".#nixosConfigurations.myhost"
+  target_host    = "192.168.1.100"
+  target_user    = "root"
+  sudo           = false
+  allow_unfree   = false
+  sops_file      = "${path.module}/sops.yaml"
+  extra_triggers = [var.instance.mac_address]
+}
+```
+
+**Without sops (minimal):**
+
+```hcl
+module "deploy" {
+  source      = "plumelo/deploy/nixos"
+  version     = "1.0.0"
+  attribute   = ".#nixosConfigurations.myhost"
+  target_host = "192.168.1.100"
+}
+```
+
+**Outputs:**
+- `derivation` — Derivation information
+- `sops_id` — Sops deploy resource ID (if sops enabled)
 
 ### nix-drv
 
@@ -12,9 +58,10 @@ Use this to detect when a Nix derivation has changed, triggering dependent resou
 
 ```hcl
 module "nix_drv" {
-  source       = "git::https://github.com/plumelo/nixtf.git//modules/nix-drv?ref=v0.3.0"
+  source       = "plumelo/deploy/nixos//modules/nix-drv"
+  version      = "1.0.0"
   attribute    = ".#nixosConfigurations.myhost"
-  allow_unfree = false  # optional, defaults to false
+  allow_unfree = false
 }
 ```
 
@@ -29,11 +76,12 @@ Uses `shell_script` from the `steigr/shell` provider to run `nix build` and capt
 
 ```hcl
 module "nix_build" {
-  source       = "git::https://github.com/plumelo/nixtf.git//modules/nix-build?ref=v0.3.0"
+  source       = "plumelo/deploy/nixos//modules/nix-build"
+  version      = "1.0.0"
   attribute    = ".#nixosConfigurations.myhost.config.system.build.toplevel"
-  allow_unfree = false  # optional, defaults to false
+  allow_unfree = false
   triggers     = {
-    drv = module.nix_drv.result.drv  # rebuild when derivation changes
+    drv = module.nix_drv.result.drv
   }
 }
 ```
@@ -47,12 +95,13 @@ Runs `nixos-rebuild switch` against a remote host over SSH. Uses `--flake` to de
 
 ```hcl
 module "deploy" {
-  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-rebuild?ref=v0.3.0"
+  source      = "plumelo/deploy/nixos//modules/nixos-rebuild"
+  version     = "1.0.0"
   attribute   = ".#nixosConfigurations.myhost"
   target_host = "192.168.1.100"
-  target_user = "root"  # optional, defaults to "root"
-  sudo        = false   # optional, defaults to false
-  triggers    = [module.nix_build.out]  # rebuild when derivation changes
+  target_user = "root"
+  sudo        = false
+  triggers    = [module.nix_build.out]
 }
 ```
 
@@ -62,87 +111,30 @@ Deploys sops-encrypted secrets to remote hosts over SSH.
 
 ```hcl
 module "sops" {
-  source   = "git::https://github.com/plumelo/nixtf.git//modules/sops-deploy?ref=v0.3.0"
+  source   = "plumelo/deploy/nixos//modules/sops-deploy"
+  version  = "1.0.0"
   host     = "192.168.1.100"
-  user     = "root"                           # optional, defaults to "root"
-  path     = "${path.module}/secrets.yaml"   # path to sops file
-  key      = "[\"age\"][\"key\"]"             # optional, defaults to age key
-  dest     = "/var/lib/sops-nix/key.txt"     # optional, defaults to sops-nix path
-  triggers = [var.some_trigger]              # optional, additional triggers
+  user     = "root"
+  path     = "${path.module}/secrets.yaml"
+  key      = "[\"age\"][\"key\"]"
+  dest     = "/var/lib/sops-nix/key.txt"
+  triggers = [var.some_trigger]
 }
 ```
 
 **Outputs:**
 - `id` — Resource ID for use as trigger in dependent resources
 
-### nixos-deploy
-
-All-in-one module that combines `nix-drv`, `nixos-rebuild`, and optionally `sops-deploy` into a single convenient module.
-
-```hcl
-module "deploy" {
-  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.3.0"
-  attribute      = ".#nixosConfigurations.myhost"
-  target_host    = "192.168.1.100"
-  target_user    = "root"                     # optional
-  sudo           = false                      # optional
-  allow_unfree   = false                      # optional
-  sops_file      = "${path.module}/sops.yaml" # optional, enables sops-deploy
-  extra_triggers = [var.instance.mac_address] # optional
-}
-```
-
-**Without sops (minimal):**
-```hcl
-module "deploy" {
-  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.3.0"
-  attribute   = ".#nixosConfigurations.myhost"
-  target_host = "192.168.1.100"
-}
-```
-
-**Outputs:**
-- `derivation` — Derivation information
-- `sops_id` — Sops deploy resource ID (if sops enabled)
-
 ## Typical Workflow
-
-### With separate modules
-
-Combine `nix-drv`, `nix-build`, and `nixos-rebuild` for a complete NixOS deployment pipeline:
-
-```hcl
-# 1. Evaluate derivation hash (runs on every plan)
-module "nix_drv" {
-  source    = "git::https://github.com/plumelo/nixtf.git//modules/nix-drv?ref=v0.3.0"
-  attribute = ".#nixosConfigurations.myhost"
-}
-
-# 2. Build when derivation changes
-module "nix_build" {
-  source    = "git::https://github.com/plumelo/nixtf.git//modules/nix-build?ref=v0.3.0"
-  attribute = ".#nixosConfigurations.myhost.config.system.build.toplevel"
-  triggers  = { drv = module.nix_drv.result.drv }
-}
-
-# 3. Deploy when build changes
-module "deploy" {
-  source      = "git::https://github.com/plumelo/nixtf.git//modules/nixos-rebuild?ref=v0.3.0"
-  attribute   = ".#nixosConfigurations.myhost"
-  target_host = var.target_host
-  target_user = "admin"
-  triggers    = [module.nix_build.out]
-}
-```
 
 ### With nixos-deploy (recommended)
 
 For most use cases, use the combined `nixos-deploy` module:
 
 ```hcl
-# Deploy NixOS configuration with sops secrets
 module "deploy" {
-  source         = "git::https://github.com/plumelo/nixtf.git//modules/nixos-deploy?ref=v0.3.0"
+  source         = "plumelo/deploy/nixos"
+  version        = "1.0.0"
   attribute      = ".#nixosConfigurations.myhost"
   target_host    = var.target_host
   sops_file      = "${path.module}/sops.yaml"
@@ -151,15 +143,50 @@ module "deploy" {
 }
 ```
 
+### With separate modules
+
+Combine `nix-drv`, `nix-build`, and `nixos-rebuild` for a complete NixOS deployment pipeline:
+
+```hcl
+# 1. Evaluate derivation hash (runs on every plan)
+module "nix_drv" {
+  source    = "plumelo/deploy/nixos//modules/nix-drv"
+  version   = "1.0.0"
+  attribute = ".#nixosConfigurations.myhost"
+}
+
+# 2. Build when derivation changes
+module "nix_build" {
+  source    = "plumelo/deploy/nixos//modules/nix-build"
+  version   = "1.0.0"
+  attribute = ".#nixosConfigurations.myhost.config.system.build.toplevel"
+  triggers  = { drv = module.nix_drv.result.drv }
+}
+
+# 3. Deploy when build changes
+module "deploy" {
+  source      = "plumelo/deploy/nixos//modules/nixos-rebuild"
+  version     = "1.0.0"
+  attribute   = ".#nixosConfigurations.myhost"
+  target_host = var.target_host
+  target_user = "admin"
+  triggers    = [module.nix_build.out]
+}
+```
+
 ## Requirements
 
+- **Terraform** >= 1.4
 - **Nix** with flakes enabled on the machine running Terraform
 - **jq** for JSON processing in shell scripts
 - **SSH agent** running with deploy key loaded (for `nixos-rebuild`)
 - **sops** CLI (for `sops-deploy`)
 - Terraform providers:
-  - `hashicorp/external` (for `nix-drv`, `nixos-rebuild`)
+  - `hashicorp/external` (for `nix-drv`, `nixos-rebuild`, `sops-deploy`)
   - `steigr/shell` (for `nix-build`)
+
+<!-- BEGIN_TF_DOCS -->
+<!-- END_TF_DOCS -->
 
 ## License
 

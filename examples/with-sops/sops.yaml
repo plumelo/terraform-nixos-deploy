@@ -1,0 +1,11 @@
+age:
+    key: ENC[AES256_GCM,data:placeholder,iv:placeholder,tag:placeholder,type:str]
+sops:
+    age:
+        - recipient: age1placeholder
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            placeholder
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-01-01T00:00:00Z"
+    mac: ENC[AES256_GCM,data:placeholder,iv:placeholder,tag:placeholder,type:str]

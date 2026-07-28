@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
+    }
+  }
+}
+
 locals {
   nix_options = jsonencode({
     options = { for k, v in var.nix_options : k => v }
@@ -5,7 +14,7 @@ locals {
 }
 
 data "external" "nix_drv" {
-  program = ["${path.module}/nix-drv.sh"]
+  program = ["bash", "${path.module}/nix-drv.sh"]
   query = {
     attribute     = var.attribute
     nix_options   = local.nix_options
