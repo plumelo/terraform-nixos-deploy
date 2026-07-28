@@ -4,6 +4,31 @@ Reusable Terraform modules for NixOS workflows.
 
 Published to the Terraform Registry as [`plumelo/deploy/nixos`](https://registry.terraform.io/modules/plumelo/deploy/nixos).
 
+## Why nixtf?
+
+Most NixOS Terraform modules run `nixos-rebuild` on every `terraform apply` — building the system closure and deploying it whether anything changed or not. `terraform plan` tells you nothing useful: you see "will run nixos-rebuild" regardless of whether the flake actually changed.
+
+nixtf takes a different approach. It evaluates the Nix derivation **before** building:
+
+1. **`nix-drv`** calls `nix eval` on every `terraform plan` — pure evaluation, no building, takes seconds. The derivation path (`/nix/store/xxx-myhost.drv`) is a content-addressed hash of every input to the system.
+2. **`nix-build`** only runs if the derivation hash changed — meaning something in your flake actually differs. No change, no build. Minutes saved on every no-op plan.
+3. **`nixos-rebuild`** only runs if a new build was produced — meaning the deploy is always intentional, never automatic.
+
+The result: `terraform plan` is fast and meaningful. It tells you *which hosts need a rebuild* before you apply. You can run `terraform apply` on a schedule across a fleet without rebuilding every host every time. Plan output shows exactly which hosts changed — not just "I ran nixos-rebuild."
+
+```
+$ terraform plan
+module.deploy.derivation: Refreshing state... [id=/nix/store/c3p...myhost.drv]
+module.deploy: Drift detected (derivation changed: /nix/store/abc... → /nix/store/def...)
+
+  # module.deploy will be replaced
+- resource "terraform_data" "nixos_rebuild" { ... }
+
+Plan: 1 to add, 1 to change, 0 to destroy.
+```
+
+Compare to a typical `nixos-rebuild`-on-apply module where every `terraform plan` says "will run nixos-rebuild" with no indication of whether anything actually changed.
+
 ## Quick Start
 
 ```hcl

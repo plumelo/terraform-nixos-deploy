@@ -2,6 +2,8 @@
 
 All-in-one module that combines `nix-drv`, `nixos-rebuild`, and optionally `sops-deploy` into a single convenient module.
 
+Unlike typical NixOS Terraform modules that build on every `terraform apply`, nixtf evaluates the derivation at plan time via `nix-drv`. The build and deploy only fire when the derivation hash actually changes — so `terraform plan` tells you which hosts need a rebuild, and `terraform apply` only rebuilds what changed.
+
 ## Example Usage
 
 **With sops:**
