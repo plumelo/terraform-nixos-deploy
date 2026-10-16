@@ -14,7 +14,8 @@ locals {
 resource "terraform_data" "deploy" {
   triggers_replace = concat([
     var.user,
-    var.host
+    var.host,
+    filesha256(var.path)
   ], var.triggers)
 
   connection {

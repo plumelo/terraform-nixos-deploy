@@ -21,6 +21,12 @@ module "sops" {
 
 - `id` — Resource ID for use as trigger in dependent resources
 
+## Behavior
+
+The file's `sha256` is part of the replacement triggers: any content change re-extracts
+and re-deploys the key. The re-extraction also MAC-verifies the file, so a hand-edited
+(corrupted) sops file fails the apply instead of deploying silently.
+
 ## Known Issues
 
 This module writes temporary files to `path.module` during apply. Do not re-run
